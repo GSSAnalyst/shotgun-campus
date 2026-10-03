@@ -1,0 +1,1017 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shotgun — campus ride board</title>
+<meta name="description" content="Post a trip, request a seat, split the gas. A ride board for students who live on campus.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2FA; --surface:#FFFFFF; --surface-2:#F3F6FC; --ink:#121B33; --ink-soft:#56627F; --line:#D6DDEC;
+  --cyan:#0A8E98; --cyan-glow:rgba(10,142,152,.18); --amber:#B76E00; --red:#D63B30; --ok:#13834F;
+  --night:#101A33; --night-2:#17233F; --night-ink:#EAF0FF; --night-soft:#9AA8C7; --hud:#4FD6E0; --sodium:#FFB547; --tail:#FF5A4E;
+  --focus:#2563EB;
+  --display:"Chakra Petch","Segoe UI",system-ui,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1528; --surface:#152039; --surface-2:#1B2847; --ink:#EAF0FF; --ink-soft:#9AA8C7; --line:#26365C;
+    --cyan:#4FD6E0; --cyan-glow:rgba(79,214,224,.16); --amber:#FFB547; --red:#FF7A70; --ok:#4ADE95; --focus:#7FB2FF; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1528; --surface:#152039; --surface-2:#1B2847; --ink:#EAF0FF; --ink-soft:#9AA8C7; --line:#26365C;
+  --cyan:#4FD6E0; --cyan-glow:rgba(79,214,224,.16); --amber:#FFB547; --red:#FF7A70; --ok:#4ADE95; --focus:#7FB2FF; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 76px);scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1200px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+h1,h2,h3,.disp{font-family:var(--display);letter-spacing:.005em}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;cursor:pointer;font-weight:600;border-radius:10px;padding:12px 20px;text-decoration:none;font-size:15.5px;line-height:1.2;transition:background .15s,box-shadow .15s,transform .1s}
+.btn:active{transform:translateY(1px)}
+.btn-hud{background:var(--hud);color:#06222A}
+.btn-hud:hover{background:#7BE6EC}
+.btn-primary{background:var(--cyan);color:#fff}
+:root[data-theme="dark"] .btn-primary{color:#06222A}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn-primary{color:#06222A}}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-line{background:transparent;color:inherit;box-shadow:inset 0 0 0 1.5px var(--line)}
+.btn-line:hover{box-shadow:inset 0 0 0 1.5px var(--ink-soft)}
+.btn-night{background:transparent;color:var(--night-ink);box-shadow:inset 0 0 0 1.5px rgba(234,240,255,.35)}
+.btn-night:hover{box-shadow:inset 0 0 0 1.5px var(--night-ink)}
+.btn-sm{padding:8px 14px;font-size:14.5px;border-radius:8px}
+.btn-ok{background:var(--ok);color:#fff}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+.text-btn{background:none;border:0;padding:6px 2px;cursor:pointer;font-weight:600;font-size:14px;color:var(--ink-soft)}
+.text-btn:hover{color:var(--ink)}
+.text-btn.danger{color:var(--red)}
+
+/* header */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:rgba(16,26,51,.82);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);border-bottom:1px solid rgba(79,214,224,.18);color:var(--night-ink)}
+.bar .wrap{display:flex;align-items:center;gap:14px;height:66px}
+.brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;font-family:var(--display);font-weight:700;font-size:22px}
+.brand svg{width:30px;height:30px}
+.campus-tag{font-family:var(--body);font-size:12.5px;font-weight:600;color:var(--hud);border:1px solid rgba(79,214,224,.45);border-radius:999px;padding:2px 9px;margin-left:2px}
+.bar nav{margin-left:auto;display:flex;align-items:center;gap:4px}
+.bar nav a{color:var(--night-soft);text-decoration:none;font-weight:500;padding:8px 12px;border-radius:8px;font-size:15px}
+.bar nav a:hover{color:var(--night-ink);background:rgba(255,255,255,.06)}
+.me-chip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:4px 12px 4px 4px;cursor:pointer;color:var(--night-ink);font-weight:600;font-size:14.5px;max-width:200px}
+.me-chip span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px;color:#06222A;flex:none}
+@media (max-width:760px){.bar nav a.nav-link{display:none}.campus-tag{display:none}}
+
+/* hero */
+.hero{position:relative;background:var(--night);color:var(--night-ink);overflow:hidden;isolation:isolate}
+#road{position:absolute;inset:0;width:100%;height:100%;z-index:-2;display:block}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(16,26,51,.92) 0%,rgba(16,26,51,.7) 42%,rgba(16,26,51,0) 75%)}
+.hero .wrap{min-height:min(700px,90vh);display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:40px;align-items:center;padding-top:60px;padding-bottom:70px}
+.hero h1{font-size:clamp(42px,6.6vw,82px);line-height:.98;font-weight:700;margin:0 0 22px;max-width:12ch;text-wrap:balance}
+.hero .lede{font-size:clamp(17px,1.8vw,20px);color:var(--night-soft);max-width:38ch;margin:0 0 30px}
+.ctas{display:flex;gap:12px;flex-wrap:wrap}
+.hud{justify-self:end;width:min(100%,400px);background:rgba(16,26,51,.62);border:1px solid rgba(79,214,224,.4);border-radius:18px;padding:20px 22px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 0 0 1px rgba(79,214,224,.08),0 0 60px rgba(79,214,224,.12)}
+.hud-top{display:flex;justify-content:space-between;align-items:center;color:var(--hud);font-size:14px;font-weight:600}
+.hud-top .live{display:flex;align-items:center;gap:7px}
+.hud-top .live i{width:8px;height:8px;border-radius:50%;background:var(--hud);box-shadow:0 0 10px var(--hud)}
+.hud-route{font-family:var(--display);font-weight:700;font-size:clamp(26px,3vw,32px);line-height:1.1;margin:14px 0 4px;min-height:2.2em;overflow-wrap:anywhere}
+.hud-route .arrow{color:var(--hud);margin:0 .25em}
+.hud-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid rgba(79,214,224,.22);padding-top:14px;margin-top:12px}
+.hud-meta div{display:flex;flex-direction:column}
+.hud-meta b{font-family:var(--display);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.hud-meta span{font-size:13px;color:var(--night-soft)}
+.hud-dots{display:flex;gap:6px;margin-top:14px}
+.hud-dots i{width:18px;height:3px;border-radius:2px;background:rgba(234,240,255,.2)}
+.hud-dots i.on{background:var(--hud)}
+.hud-fade{transition:opacity .35s}
+@media (max-width:900px){
+  .hero .wrap{grid-template-columns:1fr;min-height:auto;padding-top:44px;padding-bottom:48px}
+  .hero::before{background:linear-gradient(180deg,rgba(16,26,51,.9) 0%,rgba(16,26,51,.55) 60%,rgba(16,26,51,.85) 100%)}
+  .hud{justify-self:start}
+}
+
+/* banners */
+.banner{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:10px;padding:14px 18px;margin:28px 0 0;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:15px}
+.banner p{margin:0;flex:1;min-width:240px;color:var(--ink-soft)}
+.banner b{color:var(--ink)}
+
+/* board */
+section.block{padding:64px 0}
+.head{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;margin-bottom:26px}
+h2{font-size:clamp(30px,3.6vw,44px);line-height:1.05;margin:0;font-weight:700}
+.sub{color:var(--ink-soft);margin:8px 0 0;max-width:58ch}
+.filters{display:flex;flex-direction:column;gap:14px;margin-bottom:24px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;cursor:pointer;font-weight:500;font-size:14.5px;color:var(--ink-soft)}
+.chip svg{width:16px;height:16px}
+.chip[aria-pressed="true"]{border-color:var(--cyan);color:var(--ink);background:var(--cyan-glow)}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:7px 13px;border-radius:7px;font-weight:600;cursor:pointer;color:var(--ink-soft);font-size:14.5px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.14)}
+.search{flex:1;min-width:200px;max-width:340px;position:relative;margin-left:auto}
+.search input{width:100%;padding:10px 14px 10px 38px;border-radius:10px;border:1px solid var(--line);background:var(--surface)}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:var(--ink-soft)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.card.mine{border-color:color-mix(in srgb,var(--cyan) 55%,var(--line))}
+.card-top{display:flex;align-items:center;gap:10px;padding:14px 18px 0;font-size:13.5px;color:var(--ink-soft);font-weight:500}
+.card-top svg{width:16px;height:16px;color:var(--cyan)}
+.pill{margin-left:auto;font-weight:600;font-size:12.5px;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.pill.offer{background:var(--cyan-glow);color:var(--cyan)}
+.pill.want{background:color-mix(in srgb,var(--amber) 18%,transparent);color:var(--amber)}
+.pill.you{background:var(--ink);color:var(--bg)}
+.route{padding:12px 18px 4px}
+.route .from,.route .to{font-family:var(--display);font-weight:700;font-size:23px;line-height:1.12;overflow-wrap:anywhere}
+.route .line{display:flex;align-items:center;gap:8px;margin:6px 0;color:var(--ink-soft);font-size:13.5px}
+.route .line::before{content:"";width:22px;height:2px;background:linear-gradient(90deg,var(--cyan),transparent);border-radius:2px}
+.when{padding:4px 18px 14px;display:flex;gap:6px 14px;flex-wrap:wrap;font-size:14.5px}
+.when b{font-weight:600}
+.when span{color:var(--ink-soft)}
+.stats{display:flex;align-items:center;gap:16px;padding:14px 18px;border-top:1px dashed var(--line);flex-wrap:wrap}
+.price b{display:block;font-family:var(--display);font-size:26px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.price span{font-size:12.5px;color:var(--ink-soft)}
+.seatbar{margin-left:auto;display:flex;align-items:center;gap:5px}
+.seatbar i{width:11px;height:11px;border-radius:3px;border:1.5px solid var(--ink-soft)}
+.seatbar i.on{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 8px var(--cyan-glow)}
+.seatbar span{font-size:13px;color:var(--ink-soft);margin-left:5px;white-space:nowrap}
+.note{padding:0 18px 14px;font-size:14.5px;color:var(--ink-soft);overflow-wrap:anywhere}
+.sealed{margin:0 18px 14px;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--surface-2);font-size:14px;overflow-wrap:anywhere}
+.sealed svg{width:18px;height:18px;flex:none;color:var(--ink-soft)}
+.sealed.open{background:color-mix(in srgb,var(--ok) 12%,transparent)}
+.sealed.open svg{color:var(--ok)}
+.reqs{margin:0 18px 14px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.reqs h4{margin:0;padding:10px 12px;font-size:13.5px;font-weight:600;background:var(--surface-2);color:var(--ink-soft)}
+.req{display:flex;gap:10px;align-items:center;padding:10px 12px;border-top:1px solid var(--line);flex-wrap:wrap}
+.req .who{flex:1;min-width:140px;font-size:14.5px}
+.req .who small{display:block;color:var(--ink-soft);font-size:13px;overflow-wrap:anywhere}
+.req .state{font-size:13px;font-weight:600}
+.state.approved{color:var(--ok)}
+.state.declined{color:var(--ink-soft)}
+.foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--surface-2);flex-wrap:wrap}
+.driver{display:flex;align-items:center;gap:9px;flex:1;min-width:0;font-size:14px}
+.driver div{min-width:0}
+.driver b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.driver small{display:block;color:var(--ink-soft);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.status{font-size:14px;font-weight:600}
+.status.pending{color:var(--amber)}
+.status.approved{color:var(--ok)}
+.status.declined{color:var(--ink-soft)}
+.empty{grid-column:1/-1;border:1.5px dashed var(--line);border-radius:16px;padding:52px 24px;text-align:center;background:var(--surface)}
+.empty h3{margin:0 0 6px;font-size:24px}
+.empty p{margin:0 auto 18px;color:var(--ink-soft);max-width:44ch}
+.skeleton{height:260px;border-radius:16px;background:linear-gradient(90deg,var(--surface) 0%,var(--surface-2) 50%,var(--surface) 100%);background-size:200% 100%;animation:shimmer 1.4s infinite;border:1px solid var(--line)}
+@keyframes shimmer{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skeleton{animation:none}}
+
+/* calculator */
+.calc{display:grid;grid-template-columns:1.1fr .9fr;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:var(--surface)}
+.calc-in{padding:30px;display:grid;grid-template-columns:1fr 1fr;gap:18px 16px;align-content:start}
+.calc-out{background:var(--night);color:var(--night-ink);padding:30px;display:flex;flex-direction:column;gap:18px;position:relative;overflow:hidden}
+.calc-out::after{content:"";position:absolute;right:-80px;top:-80px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(79,214,224,.22),transparent 70%);pointer-events:none}
+.gauge{font-family:var(--display);font-size:clamp(52px,7vw,84px);font-weight:700;line-height:.9;color:var(--hud);font-variant-numeric:tabular-nums;text-shadow:0 0 24px rgba(79,214,224,.35)}
+.gauge-label{color:var(--night-soft);margin:6px 0 0;font-size:15px}
+.calc-out dl{margin:0;display:grid;grid-template-columns:1fr auto;gap:8px 14px;border-top:1px solid rgba(79,214,224,.25);padding-top:16px;font-variant-numeric:tabular-nums}
+.calc-out dt{color:var(--night-soft)}
+.calc-out dd{margin:0;font-weight:600;text-align:right}
+.calc-out p.fine{margin:0;font-size:13.5px;color:var(--night-soft)}
+@media (max-width:860px){.calc{grid-template-columns:1fr}.calc-in,.calc-out{padding:22px}}
+
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field.full{grid-column:1/-1}
+.field label{font-weight:600;font-size:14px}
+.field .hint{font-size:13px;color:var(--ink-soft)}
+.field input,.field select,.field textarea{padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);width:100%;min-width:0}
+.field textarea{resize:vertical;min-height:70px}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px var(--cyan-glow)}
+.range{display:flex;align-items:center;gap:12px}
+.range input{flex:1;accent-color:var(--cyan);border:0;padding:0}
+.range output{font-family:var(--display);font-weight:700;font-size:20px;min-width:1.5ch;text-align:right}
+.check{grid-column:1/-1;display:flex;gap:10px;align-items:flex-start;font-size:15px;cursor:pointer}
+.check input{width:18px;height:18px;margin-top:3px;accent-color:var(--cyan)}
+
+/* privacy */
+.privacy{background:var(--night);color:var(--night-ink);border:1px solid rgba(79,214,224,.2);border-radius:24px;padding:clamp(28px,5vw,56px);display:grid;grid-template-columns:.9fr 1.1fr;gap:40px;position:relative;overflow:hidden}
+.privacy::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(79,214,224,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(79,214,224,.06) 1px,transparent 1px);background-size:32px 32px;mask-image:radial-gradient(ellipse at 20% 30%,#000 10%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse at 20% 30%,#000 10%,transparent 70%);pointer-events:none}
+.privacy h2{color:var(--night-ink)}
+.privacy .sub{color:var(--night-soft)}
+.lock{width:84px;height:84px;margin-bottom:22px}
+.points{display:flex;flex-direction:column;gap:4px;position:relative}
+.point{display:grid;grid-template-columns:44px 1fr;gap:14px;padding:16px 0;border-bottom:1px solid rgba(79,214,224,.16)}
+.point:last-child{border-bottom:0}
+.point .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(79,214,224,.1);color:var(--hud)}
+.point .ico svg{width:22px;height:22px}
+.point h3{margin:0 0 4px;font-size:19px}
+.point p{margin:0;color:var(--night-soft);font-size:15px}
+@media (max-width:860px){.privacy{grid-template-columns:1fr;gap:20px}}
+
+footer{padding:32px 0 44px;color:var(--ink-soft);font-size:14px}
+footer .wrap{display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap}
+
+/* dialogs */
+dialog{border:0;border-radius:20px;padding:0;width:min(620px,calc(100% - 24px));max-height:calc(100% - 24px);background:var(--surface);color:var(--ink);box-shadow:0 40px 90px rgba(5,10,25,.5)}
+dialog.narrow{width:min(440px,calc(100% - 24px))}
+dialog::backdrop{background:rgba(8,13,28,.66);backdrop-filter:blur(3px)}
+.dh{display:flex;align-items:center;gap:12px;padding:20px 24px;background:var(--night);color:var(--night-ink);border-bottom:1px solid rgba(79,214,224,.25)}
+.dh h2{font-size:24px;color:var(--night-ink)}
+.dh .x{margin-left:auto;width:36px;height:36px;border-radius:9px;border:0;background:rgba(255,255,255,.08);color:var(--night-ink);font-size:22px;cursor:pointer;line-height:1}
+.db{padding:22px 24px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.db p.lead{grid-column:1/-1;margin:0;color:var(--ink-soft)}
+.df{display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:16px 24px 22px;border-top:1px solid var(--line);flex-wrap:wrap}
+.df .left{margin-right:auto}
+.err{grid-column:1/-1;margin:0;color:var(--red);font-size:14px}
+.err:empty{display:none}
+.preview{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--night);color:var(--night-ink);border-radius:12px;padding:14px 16px;flex-wrap:wrap}
+.preview b{font-family:var(--display);font-size:24px;color:var(--hud)}
+.sent{grid-column:1/-1;text-align:center;padding:10px 0}
+.sent svg{width:56px;height:56px;color:var(--cyan)}
+.sent h3{margin:8px 0 4px;font-size:22px}
+.sent p{margin:0;color:var(--ink-soft);overflow-wrap:anywhere}
+@media (max-width:560px){.db{grid-template-columns:1fr}}
+
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);background:var(--night);color:var(--night-ink);border:1px solid rgba(79,214,224,.4);padding:12px 18px;border-radius:12px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:60;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Shotgun home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="9" fill="none" stroke="#4FD6E0" stroke-width="2"/><path d="M9 21l7-11 7 11" fill="none" stroke="#EAF0FF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="21" r="2" fill="#FFB547"/></svg>
+      Shotgun <span class="campus-tag" id="campusTag"></span>
+    </a>
+    <nav aria-label="Main">
+      <a class="nav-link" href="#board">Rides</a>
+      <a class="nav-link" href="#split">Split gas</a>
+      <a class="nav-link" href="#privacy">Privacy</a>
+      <button class="btn btn-hud btn-sm" id="signInBtn" hidden>Sign in</button>
+      <button class="me-chip" id="meChip" hidden aria-label="Your profile"><span class="avatar" id="meAvatar"></span><span id="meName"></span></button>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <canvas id="road" aria-hidden="true"></canvas>
+    <div class="wrap">
+      <div>
+        <h1>Everyone's going somewhere. Ride together.</h1>
+        <p class="lede" id="lede">A ride board just for students on campus. Post a trip, grab a seat, and split the gas without the group-chat chaos.</p>
+        <div class="ctas">
+          <button class="btn btn-hud" data-post="offer">I'm driving</button>
+          <button class="btn btn-night" data-post="want">I need a ride</button>
+        </div>
+      </div>
+      <aside class="hud" aria-label="Next departure">
+        <div class="hud-top"><span class="live"><i></i>Next departure</span><span id="hudCount"></span></div>
+        <div class="hud-fade" id="hudBody">
+          <div class="hud-route" id="hudRoute">Scanning the board…</div>
+          <div class="hud-meta">
+            <div><b id="hudWhen">—</b><span>Leaves in</span></div>
+            <div><b id="hudSeats">—</b><span>Seats open</span></div>
+            <div><b id="hudPrice">—</b><span>Per seat</span></div>
+          </div>
+        </div>
+        <div class="hud-dots" id="hudDots"></div>
+      </aside>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="banner" id="demoBanner" hidden>
+      <p><b>Demo mode.</b> You're seeing sample rides, saved only in this browser. Connect Supabase in <b>config.js</b> to make it a live board for your campus.</p>
+    </div>
+    <div class="banner" id="gateBanner" hidden>
+      <p><b>Rides are visible to signed-in students only.</b> Sign in with your campus email to see who's driving where.</p>
+      <button class="btn btn-primary btn-sm" data-signin>Sign in</button>
+    </div>
+  </div>
+
+  <section class="block" id="board">
+    <div class="wrap">
+      <div class="head">
+        <div>
+          <h2>The ride board</h2>
+          <p class="sub">Request a seat and the driver decides. Their contact details unlock only after they approve you.</p>
+        </div>
+        <button class="btn btn-primary" data-post="offer">Post a ride</button>
+      </div>
+      <div class="filters">
+        <div class="chips" id="catChips" role="group" aria-label="Trip type"></div>
+        <div class="row">
+          <div class="seg" role="group" aria-label="Show">
+            <button aria-pressed="true" data-kind="all">All</button>
+            <button aria-pressed="false" data-kind="offer">Driving</button>
+            <button aria-pressed="false" data-kind="want">Need a ride</button>
+            <button aria-pressed="false" data-kind="mine">Mine</button>
+          </div>
+          <label class="search"><span class="sr">Search by place</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="q" placeholder="Search a city or place">
+          </label>
+        </div>
+      </div>
+      <div class="grid" id="grid" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="block" id="split" style="padding-top:8px">
+    <div class="wrap">
+      <div class="head"><div><h2>Split the gas</h2><p class="sub">Settle the math before you leave the lot.</p></div></div>
+      <div class="calc">
+        <div class="calc-in">
+          <div class="field"><label for="cMiles">Distance (miles)</label><input id="cMiles" type="number" min="1" value="240" inputmode="decimal"></div>
+          <div class="field"><label for="cMpg">Car's MPG</label><input id="cMpg" type="number" min="1" step="0.5" value="30" inputmode="decimal"></div>
+          <div class="field"><label for="cGas">Gas price ($/gal)</label><input id="cGas" type="number" min="0" step="0.01" value="4.90" inputmode="decimal"></div>
+          <div class="field"><label for="cTolls">Tolls and parking ($)</label><input id="cTolls" type="number" min="0" value="0" inputmode="decimal"></div>
+          <div class="field full"><label for="cPeople">People in the car, driver included</label><div class="range"><input id="cPeople" type="range" min="1" max="7" value="4"><output id="cPeopleOut">4</output></div></div>
+          <label class="check"><input type="checkbox" id="cRound"> Round trip</label>
+          <label class="check"><input type="checkbox" id="cFree"> Driver rides free (passengers cover it)</label>
+        </div>
+        <div class="calc-out" aria-live="polite">
+          <div><div class="gauge" id="cEach">$0</div><p class="gauge-label" id="cEachLabel">per person</p></div>
+          <dl>
+            <dt>Gallons</dt><dd id="cGal">0</dd>
+            <dt>Gas</dt><dd id="cFuel">$0</dd>
+            <dt>Tolls and parking</dt><dd id="cToll">$0</dd>
+            <dt>Trip total</dt><dd id="cTotal">$0</dd>
+          </dl>
+          <p class="fine">Distance ÷ MPG × gas price, plus tolls, divided by everyone paying.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="privacy" style="padding-top:8px">
+    <div class="wrap">
+      <div class="privacy">
+        <div style="position:relative">
+          <svg class="lock" viewBox="0 0 84 84" aria-hidden="true"><rect x="16" y="36" width="52" height="40" rx="10" fill="none" stroke="#4FD6E0" stroke-width="3"/><path d="M28 36V26a14 14 0 0 1 28 0v10" fill="none" stroke="#4FD6E0" stroke-width="3"/><circle cx="42" cy="54" r="5" fill="#FFB547"/><path d="M42 59v7" stroke="#FFB547" stroke-width="3" stroke-linecap="round"/></svg>
+          <h2>Built so strangers can't see you</h2>
+          <p class="sub">Privacy is enforced by the database's own rules, not just hidden on the page. Even someone poking at the API gets nothing they shouldn't.</p>
+        </div>
+        <div class="points">
+          <div class="point"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></div><div><h3>Campus email only</h3><p id="ptEmail">Sign-in is a one-time link sent to your campus inbox. No passwords to leak, and the database rejects anyone without a campus address.</p></div></div>
+          <div class="point"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div><div><h3>Contact details stay sealed</h3><p>Your phone or handle is shown only to riders you approve. Everyone else on the board sees a locked field.</p></div></div>
+          <div class="point"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div><div><h3>Encrypted in transit and at rest</h3><p>Every connection runs over HTTPS, and Supabase encrypts the stored database at rest.</p></div></div>
+          <div class="point"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></div><div><h3>Old rides disappear</h3><p>Past trips drop off the board, and deleting a ride removes its requests and contact details with it.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap"><span>Shotgun is a student ride board. Riders and drivers arrange trips between themselves; share costs, not profit.</span><span>Meet somewhere public and tell a friend your route.</span></div></footer>
+
+<!-- Sign in -->
+<dialog id="dSignIn" class="narrow" aria-labelledby="tSignIn">
+  <form id="fSignIn" novalidate>
+    <div class="dh"><h2 id="tSignIn">Sign in</h2><button type="button" class="x" data-close aria-label="Close">×</button></div>
+    <div class="db" id="signInBody">
+      <p class="lead" id="signInLead"></p>
+      <div class="field full"><label for="sEmail">Campus email</label><input id="sEmail" type="email" autocomplete="email" required></div>
+      <p class="err" id="sErr"></p>
+    </div>
+    <div class="db" id="signInSent" hidden>
+      <div class="sent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><h3>Check your inbox</h3><p id="sentTo"></p></div>
+    </div>
+    <div class="df"><button type="button" class="btn btn-line" data-close>Cancel</button><button class="btn btn-primary" id="sSubmit">Email me a sign-in link</button></div>
+  </form>
+</dialog>
+
+<!-- Profile -->
+<dialog id="dProfile" class="narrow" aria-labelledby="tProfile">
+  <form id="fProfile" novalidate>
+    <div class="dh"><h2 id="tProfile">Your profile</h2><button type="button" class="x" data-close aria-label="Close">×</button></div>
+    <div class="db">
+      <p class="lead">Drivers see this when you request a seat.</p>
+      <div class="field full"><label for="pName">Name</label><input id="pName" maxlength="40" autocomplete="given-name" required placeholder="First name is fine"></div>
+      <div class="field full"><label for="pCollege">College or dorm</label><input id="pCollege" maxlength="60" list="colleges" placeholder="Optional"><datalist id="colleges"></datalist></div>
+      <p class="err" id="pErr"></p>
+    </div>
+    <div class="df"><button type="button" class="text-btn danger left" id="signOutBtn">Sign out</button><button type="button" class="btn btn-line" data-close>Cancel</button><button class="btn btn-primary" id="pSubmit">Save profile</button></div>
+  </form>
+</dialog>
+
+<!-- Post ride -->
+<dialog id="dPost" aria-labelledby="tPost">
+  <form id="fPost" novalidate>
+    <div class="dh"><h2 id="tPost">Post a ride</h2><button type="button" class="x" data-close aria-label="Close">×</button></div>
+    <div class="db">
+      <div class="seg" role="group" aria-label="Ride type" style="grid-column:1/-1;justify-self:start">
+        <button type="button" aria-pressed="true" data-pk="offer">I'm driving</button>
+        <button type="button" aria-pressed="false" data-pk="want">I need a ride</button>
+      </div>
+      <div class="field"><label for="rFrom">From</label><input id="rFrom" maxlength="60" required placeholder="Campus"></div>
+      <div class="field"><label for="rTo">To</label><input id="rTo" maxlength="60" required placeholder="SFO"></div>
+      <div class="field"><label for="rDate">Date</label><input id="rDate" type="date" required></div>
+      <div class="field"><label for="rTime">Leaving at</label><input id="rTime" type="time" value="09:00" required></div>
+      <div class="field"><label for="rCat">Trip type</label><select id="rCat"></select></div>
+      <div class="field"><label for="rSeats" id="rSeatsLabel">Open seats</label><select id="rSeats"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></div>
+      <div class="field"><label for="rMiles">Distance (miles)</label><input id="rMiles" type="number" min="1" inputmode="decimal" placeholder="Optional"></div>
+      <div class="field" data-drive><label for="rMpg">Car's MPG</label><input id="rMpg" type="number" min="1" step="0.5" value="30" inputmode="decimal"></div>
+      <div class="field" data-drive><label for="rGas">Gas ($/gal)</label><input id="rGas" type="number" min="0" step="0.01" value="4.90" inputmode="decimal"></div>
+      <div class="field full"><label for="rNote">Note</label><textarea id="rNote" maxlength="280" placeholder="One carry-on each. Leaving from the east remote lot."></textarea></div>
+      <div class="field full"><label for="rContact">Contact for approved riders</label><input id="rContact" maxlength="80" required placeholder="Phone number or Instagram"><span class="hint">Sealed. Only people you approve can see it.</span></div>
+      <div class="preview" data-drive><span>Each seat pays, with the car full</span><b id="rPreview">—</b></div>
+      <p class="err" id="rErr"></p>
+    </div>
+    <div class="df"><button type="button" class="btn btn-line" data-close>Cancel</button><button class="btn btn-primary" id="rSubmit">Post ride</button></div>
+  </form>
+</dialog>
+
+<!-- Request seat -->
+<dialog id="dReq" class="narrow" aria-labelledby="tReq">
+  <form id="fReq" novalidate>
+    <div class="dh"><h2 id="tReq">Request a seat</h2><button type="button" class="x" data-close aria-label="Close">×</button></div>
+    <div class="db">
+      <p class="lead" id="reqLead"></p>
+      <div class="field full"><label for="qMsg">Message</label><textarea id="qMsg" maxlength="200" placeholder="Hi! I have one backpack and can pitch in for gas."></textarea><span class="hint">Optional, but drivers say yes faster when you say hi.</span></div>
+      <p class="err" id="qErr"></p>
+    </div>
+    <div class="df"><button type="button" class="btn btn-line" data-close>Cancel</button><button class="btn btn-primary" id="qSubmit">Send request</button></div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script>
+(() => {
+"use strict";
+const CFG = Object.assign({ SUPABASE_URL: "", SUPABASE_ANON_KEY: "", CAMPUS_DOMAIN: "ucsc.edu", CAMPUS_NAME: "UCSC" }, window.SHOTGUN_CONFIG || {});
+const DOMAIN = String(CFG.CAMPUS_DOMAIN || "").toLowerCase().replace(/^@/, "");
+
+/* ---------------- helpers ---------------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const money = n => !isFinite(n) ? "—" : "$" + (n >= 100 ? Math.round(n).toLocaleString() : n.toFixed(2).replace(/\.00$/, ""));
+function el(tag, attrs = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k === "text") n.textContent = v;
+    else if (k === "html") n.innerHTML = v; // static markup only
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) n.append(c.nodeType ? c : document.createTextNode(String(c)));
+  return n;
+}
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 2800); }
+const localDate = d => { const x = new Date(d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0, 10); };
+function whenText(iso) {
+  const d = new Date(iso); if (isNaN(d)) return "";
+  return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }) + ", " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+function relText(iso) {
+  const ms = new Date(iso) - Date.now(), h = ms / 36e5;
+  if (h < 0) return "Now";
+  if (h < 1) return Math.max(1, Math.round(ms / 6e4)) + " min";
+  if (h < 24) return Math.round(h) + " hr";
+  return Math.round(h / 24) + (Math.round(h / 24) === 1 ? " day" : " days");
+}
+function hue(s) { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
+function avatar(name, id) {
+  const a = el("span", { class: "avatar", text: (name || "?").trim().charAt(0).toUpperCase() || "?" });
+  a.style.background = `hsl(${hue(id || name)} 70% 72%)`; return a;
+}
+function perSeat(r) {
+  if (r.kind !== "offer" || !num(r.miles) || !num(r.mpg)) return null;
+  return num(r.miles) / num(r.mpg) * num(r.gas_price) / (num(r.seats) + 1);
+}
+
+const ICONS = {
+  trip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m3 19 6-10 4 6 2-3 6 7z"/></svg>',
+  airport: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M2 13l20-6-6 13-3-6z"/></svg>',
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 11 12 4l8 7v9H4z"/><path d="M10 20v-5h4v5"/></svg>',
+  errand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>',
+  event: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>'
+};
+const CATS = [["trip", "Weekend trip"], ["airport", "Airport run"], ["home", "Home for break"], ["errand", "Errand run"], ["event", "Concert or event"]];
+const CAT_NAME = Object.fromEntries(CATS);
+const LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+const UNLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>';
+
+/* ---------------- state ---------------- */
+const S = {
+  mode: "loading",   // loading | demo | signedout | live
+  me: null,          // { id, email }
+  profile: null,     // { display_name, college }
+  rides: [], counts: {}, myReqs: {}, incoming: {}, contacts: {}
+};
+
+/* ---------------- demo backend (this browser only) ---------------- */
+const DemoAPI = (() => {
+  const KEY = "shotgun-campus-demo-v1";
+  const me = { id: "demo-me", email: "you@" + DOMAIN };
+  let db;
+  function seed() {
+    const at = (days, h, m = 0) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(h, m, 0, 0); return d.toISOString(); };
+    const people = { m: { display_name: "Maya", college: "Porter" }, j: { display_name: "Jordan", college: "Crown" }, a: { display_name: "Aiden", college: "Oakes" }, p: { display_name: "Priya", college: "Cowell" } };
+    return {
+      v: 1, profile: null, profiles: people,
+      rides: [
+        { id: "s1", owner_id: "m", kind: "offer", category: "airport", origin: "East Remote Lot", destination: "SFO Terminal 2", depart_at: at(2, 6, 30), seats: 3, miles: 85, mpg: 32, gas_price: 4.9, note: "Early flight crowd. One carry-on plus a backpack each." },
+        { id: "s2", owner_id: "j", kind: "offer", category: "trip", origin: "Crown College", destination: "Yosemite Valley", depart_at: at(4, 7), seats: 4, miles: 200, mpg: 28, gas_price: 4.9, note: "Day hike to Mist Trail, back by 10pm. Snacks on me." },
+        { id: "s3", owner_id: "a", kind: "want", category: "home", origin: "Campus", destination: "Fresno", depart_at: at(9, 15), seats: 1, miles: 150, note: "Heading home for the long weekend. Happy to cover my share and play DJ." },
+        { id: "s4", owner_id: "p", kind: "offer", category: "errand", origin: "Quarry Plaza", destination: "Costco, Santa Cruz", depart_at: at(1, 17, 30), seats: 2, miles: 8, mpg: 30, gas_price: 4.9, note: "Bulk snack run. Trunk space for two carts." }
+      ],
+      contacts: { s1: "Text (831) 555-0142", s2: "Instagram @jordan.drives", s4: "Text (831) 555-0199" },
+      requests: [{ id: "q0", ride_id: "s2", rider_id: "p", status: "approved" }]
+    };
+  }
+  function load() { try { db = JSON.parse(localStorage.getItem(KEY)); } catch {} if (!db || db.v !== 1) db = seed(); }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch {} }
+  const prof = id => id === me.id ? (db.profile || { display_name: "You", college: "" }) : db.profiles[id];
+  return {
+    me, async init() { load(); return me; },
+    async getProfile() { return db.profile; },
+    async saveProfile(p) { db.profile = p; save(); },
+    async fetchAll() {
+      const cutoff = Date.now() - 6 * 36e5;
+      const rides = db.rides.filter(r => new Date(r.depart_at) >= cutoff).map(r => ({ ...r, owner: prof(r.owner_id) })).sort((a, b) => a.depart_at.localeCompare(b.depart_at));
+      const counts = {}, myReqs = {}, incoming = {}, contacts = {};
+      for (const q of db.requests) {
+        if (q.status === "approved") counts[q.ride_id] = (counts[q.ride_id] || 0) + 1;
+        if (q.rider_id === me.id) myReqs[q.ride_id] = q;
+        const ride = db.rides.find(r => r.id === q.ride_id);
+        if (ride && ride.owner_id === me.id && q.rider_id !== me.id) (incoming[q.ride_id] ||= []).push({ ...q, rider: prof(q.rider_id) });
+      }
+      for (const r of db.rides) {
+        const mine = r.owner_id === me.id, ok = myReqs[r.id] && myReqs[r.id].status === "approved";
+        if ((mine || ok) && db.contacts[r.id]) contacts[r.id] = db.contacts[r.id];
+      }
+      return { rides, counts, myReqs, incoming, contacts };
+    },
+    async createRide(r, contact) { const id = "r" + Date.now().toString(36); db.rides.push({ id, owner_id: me.id, ...r }); db.contacts[id] = contact; save(); return id; },
+    async deleteRide(id) { db.rides = db.rides.filter(r => r.id !== id); db.requests = db.requests.filter(q => q.ride_id !== id); delete db.contacts[id]; save(); },
+    async requestSeat(ride_id, message) {
+      const q = { id: "q" + Date.now().toString(36), ride_id, rider_id: me.id, status: "pending", message }; db.requests.push(q); save();
+      setTimeout(() => { const x = db.requests.find(y => y.id === q.id); if (x && x.status === "pending") { x.status = "approved"; save(); refresh(); toast("Demo: the driver approved you. Contact unlocked."); } }, 2500);
+    },
+    async cancelRequest(id) { db.requests = db.requests.filter(q => q.id !== id); save(); },
+    async setStatus(id, status) { const q = db.requests.find(x => x.id === id); if (q) q.status = status; save(); },
+    async signOut() {}, subscribe() {}
+  };
+})();
+
+/* ---------------- live backend (Supabase) ---------------- */
+function LiveAPI(sb) {
+  const must = ({ data, error }) => { if (error) throw error; return data; };
+  return {
+    sb,
+    async getProfile() { return must(await sb.from("profiles").select("display_name, college").eq("id", S.me.id).maybeSingle()); },
+    async saveProfile(p) { must(await sb.from("profiles").upsert({ id: S.me.id, display_name: p.display_name, college: p.college || null })); },
+    async fetchAll() {
+      const since = new Date(Date.now() - 6 * 36e5).toISOString();
+      const [rides, counts, mine, inc, contacts] = await Promise.all([
+        sb.from("rides").select("*, owner:profiles(display_name, college)").gte("depart_at", since).order("depart_at").limit(400),
+        sb.rpc("seat_counts"),
+        sb.from("seat_requests").select("id, ride_id, status").eq("rider_id", S.me.id),
+        sb.from("seat_requests").select("id, ride_id, status, message, rider_id, rider:profiles(display_name, college)").neq("rider_id", S.me.id).order("created_at"),
+        sb.from("ride_contacts").select("ride_id, contact")
+      ]).then(rs => rs.map(must));
+      const out = { rides, counts: {}, myReqs: {}, incoming: {}, contacts: {} };
+      for (const c of counts || []) out.counts[c.ride_id] = Number(c.taken);
+      for (const q of mine || []) out.myReqs[q.ride_id] = q;
+      for (const q of inc || []) (out.incoming[q.ride_id] ||= []).push(q);
+      for (const c of contacts || []) out.contacts[c.ride_id] = c.contact;
+      return out;
+    },
+    async createRide(r, contact) {
+      const row = must(await sb.from("rides").insert(r).select("id").single());
+      must(await sb.from("ride_contacts").insert({ ride_id: row.id, contact }));
+      return row.id;
+    },
+    async deleteRide(id) { must(await sb.from("rides").delete().eq("id", id)); },
+    async requestSeat(ride_id, message) { must(await sb.from("seat_requests").insert({ ride_id, message: message || null })); },
+    async cancelRequest(id) { must(await sb.from("seat_requests").delete().eq("id", id)); },
+    async setStatus(id, status) { must(await sb.from("seat_requests").update({ status }).eq("id", id)); },
+    async signOut() { await sb.auth.signOut(); },
+    subscribe() {
+      if (this.ch) return;
+      this.ch = sb.channel("board")
+        .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, refreshSoon)
+        .on("postgres_changes", { event: "*", schema: "public", table: "seat_requests" }, refreshSoon)
+        .subscribe();
+    }
+  };
+}
+
+let API = null;
+let refreshTimer;
+function refreshSoon() { clearTimeout(refreshTimer); refreshTimer = setTimeout(refresh, 300); }
+async function refresh() {
+  if (!API || (S.mode !== "live" && S.mode !== "demo")) return render();
+  try { Object.assign(S, await API.fetchAll()); }
+  catch (e) { console.error(e); toast("Couldn't load rides. Check your connection."); }
+  render();
+}
+
+/* ---------------- auth + boot ---------------- */
+async function boot() {
+  $("#campusTag").textContent = CFG.CAMPUS_NAME || DOMAIN;
+  $("#signInLead").textContent = `We'll email a one-time link to your @${DOMAIN} address. No password needed.`;
+  $("#sEmail").placeholder = "you@" + DOMAIN;
+  $("#ptEmail").textContent = `Sign-in is a one-time link sent to your @${DOMAIN} inbox. No passwords to leak, and the database itself rejects anyone without a campus address.`;
+  if (DOMAIN === "ucsc.edu") $("#colleges").append(...["Cowell", "Stevenson", "Crown", "Merrill", "Porter", "Kresge", "Oakes", "Rachel Carson", "College Nine", "John R. Lewis", "Graduate Student Commons"].map(c => el("option", { value: c })));
+  $("#rCat").append(...CATS.map(([v, l]) => el("option", { value: v, text: l })));
+  buildChips(); render();
+
+  const live = CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY && window.supabase && window.supabase.createClient;
+  if (!live) {
+    API = DemoAPI; S.me = await API.init(); S.profile = await API.getProfile() || null; S.mode = "demo";
+    $("#demoBanner").hidden = false; updateHeader(); return refresh();
+  }
+  const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY, { auth: { persistSession: true, detectSessionInUrl: true } });
+  API = LiveAPI(sb);
+  const onSession = async (session) => {
+    if (!session) { S.mode = "signedout"; S.me = null; S.profile = null; Object.assign(S, { rides: [], counts: {}, myReqs: {}, incoming: {}, contacts: {} }); updateHeader(); render(); return; }
+    const email = (session.user.email || "").toLowerCase();
+    if (!email.endsWith("@" + DOMAIN)) { await sb.auth.signOut(); toast(`Only @${DOMAIN} emails can use this board.`); return; }
+    S.me = { id: session.user.id, email }; S.mode = "live";
+    try { S.profile = await API.getProfile(); } catch { S.profile = null; }
+    updateHeader(); API.subscribe(); await refresh();
+    if (!S.profile) openProfile(true);
+  };
+  const { data } = await sb.auth.getSession();
+  await onSession(data.session);
+  sb.auth.onAuthStateChange((evt, session) => { if (evt === "SIGNED_IN" || evt === "SIGNED_OUT") onSession(session); });
+}
+
+function updateHeader() {
+  const signedIn = S.mode === "live" || S.mode === "demo";
+  $("#signInBtn").hidden = signedIn || S.mode === "loading";
+  $("#meChip").hidden = !signedIn;
+  $("#gateBanner").hidden = S.mode !== "signedout";
+  if (signedIn) {
+    const name = (S.profile && S.profile.display_name) || (S.mode === "demo" ? "You" : "Set up profile");
+    $("#meName").textContent = name;
+    const a = avatar(name, S.me.id); $("#meAvatar").replaceWith(Object.assign(a, { id: "meAvatar" }));
+  }
+  $("#signOutBtn").hidden = S.mode !== "live";
+}
+
+/* ---------------- gates ---------------- */
+function needSignIn() {
+  if (S.mode === "signedout") { openSignIn(); return true; }
+  if (S.mode === "loading") { toast("One sec, still loading."); return true; }
+  if (S.mode === "live" && !S.profile) { openProfile(true); return true; }
+  return false;
+}
+
+/* ---------------- filters ---------------- */
+let fCat = "all", fKind = "all", fQ = "";
+function buildChips() {
+  const wrap = $("#catChips");
+  const all = el("button", { class: "chip", "aria-pressed": "true", "data-cat": "all", text: "Everything" });
+  wrap.append(all, ...CATS.map(([v, l]) => el("button", { class: "chip", "aria-pressed": "false", "data-cat": v }, el("span", { html: ICONS[v], style: "display:contents" }), l)));
+  wrap.addEventListener("click", e => { const b = e.target.closest("[data-cat]"); if (!b) return; fCat = b.dataset.cat; $$("[data-cat]", wrap).forEach(x => x.setAttribute("aria-pressed", x === b)); render(); });
+}
+$$("[data-kind]").forEach(b => b.addEventListener("click", () => { fKind = b.dataset.kind; $$("[data-kind]").forEach(x => x.setAttribute("aria-pressed", x === b)); render(); }));
+$("#q").addEventListener("input", e => { fQ = e.target.value.trim().toLowerCase(); render(); });
+
+/* ---------------- render ---------------- */
+function render() { renderGrid(); renderHud(); }
+
+function renderGrid() {
+  const g = $("#grid"); g.replaceChildren();
+  if (S.mode === "loading") { for (let i = 0; i < 3; i++) g.append(el("div", { class: "skeleton" })); return; }
+  if (S.mode === "signedout") {
+    g.append(el("div", { class: "empty" }, el("h3", { text: "Sign in to see the board" }), el("p", { text: `Rides are only visible to students signed in with an @${DOMAIN} email.` }), el("button", { class: "btn btn-primary", onclick: openSignIn }, "Sign in with campus email")));
+    return;
+  }
+  const mineIds = new Set(S.rides.filter(r => r.owner_id === S.me.id || S.myReqs[r.id]).map(r => r.id));
+  const list = S.rides.filter(r =>
+    (fCat === "all" || r.category === fCat) &&
+    (fKind === "all" || (fKind === "mine" ? mineIds.has(r.id) : r.kind === fKind)) &&
+    (!fQ || `${r.origin} ${r.destination} ${r.note || ""}`.toLowerCase().includes(fQ)));
+  if (!list.length) {
+    const none = !S.rides.length;
+    g.append(el("div", { class: "empty" },
+      el("h3", { text: none ? "The board is empty" : "Nothing matches that" }),
+      el("p", { text: none ? "Be the first. Post a trip you're driving, or ask for a ride and see who bites." : "Try a different filter, or post the ride you're looking for so drivers can find you." }),
+      el("button", { class: "btn btn-primary", onclick: () => openPost(fKind === "want" ? "want" : "offer") }, none ? "Post the first ride" : "Post a ride")));
+    return;
+  }
+  list.forEach(r => g.append(card(r)));
+}
+
+function card(r) {
+  const offer = r.kind === "offer";
+  const mine = r.owner_id === S.me.id;
+  const myReq = S.myReqs[r.id];
+  const taken = S.counts[r.id] || 0;
+  const seats = num(r.seats) || 1;
+  const full = offer && taken >= seats;
+  const price = perSeat(r);
+  const owner = r.owner || {};
+  const ownerName = mine ? "You" : (owner.display_name || "A student");
+
+  const c = el("article", { class: "card" + (mine ? " mine" : ""), id: "ride-" + r.id });
+  c.append(el("div", { class: "card-top" },
+    el("span", { html: ICONS[r.category] || ICONS.trip, style: "display:contents" }),
+    CAT_NAME[r.category] || "Trip",
+    mine ? el("span", { class: "pill you", text: "Your post" }) : el("span", { class: "pill " + (offer ? "offer" : "want"), text: offer ? "Driving" : "Needs a ride" })));
+  c.append(el("div", { class: "route" },
+    el("div", { class: "from", text: r.origin }),
+    el("div", { class: "line", text: r.miles ? Math.round(num(r.miles)) + " miles" : "to" }),
+    el("div", { class: "to", text: r.destination })));
+  const rt = relText(r.depart_at);
+  c.append(el("div", { class: "when" }, el("b", { text: whenText(r.depart_at) }), el("span", { text: rt === "Now" ? "Leaving now" : "in " + rt })));
+
+  const stats = el("div", { class: "stats" });
+  if (offer) {
+    stats.append(el("div", { class: "price" }, el("b", { text: price != null ? money(price) : "Ask" }), el("span", { text: price != null ? "per seat, car full" : "driver will set the split" })));
+    const bar = el("div", { class: "seatbar", "aria-label": `${taken} of ${seats} seats taken` });
+    for (let i = 0; i < seats; i++) bar.append(el("i", { class: i < taken ? "on" : "" }));
+    bar.append(el("span", { text: full ? "Full" : (seats - taken) + " open" }));
+    stats.append(bar);
+  } else {
+    stats.append(el("div", { class: "price" }, el("b", { text: seats + (seats === 1 ? " seat" : " seats") }), el("span", { text: "needed" })));
+    if (taken) stats.append(el("div", { class: "seatbar" }, el("span", { text: "Driver found" })));
+  }
+  c.append(stats);
+  if (r.note) c.append(el("div", { class: "note", text: r.note }));
+
+  const contact = S.contacts[r.id];
+  if (mine) {
+    c.append(el("div", { class: "sealed open" }, el("span", { html: UNLOCK, style: "display:contents" }), el("span", {}, "Shared with approved ", offer ? "riders" : "drivers", ": ", el("b", { text: contact || "no contact set" }))));
+    const reqs = S.incoming[r.id] || [];
+    if (reqs.length) {
+      const box = el("div", { class: "reqs" }, el("h4", { text: (offer ? "Seat requests" : "Drivers offering") + " (" + reqs.length + ")" }));
+      for (const q of reqs) {
+        const rn = (q.rider && q.rider.display_name) || "A student";
+        const row = el("div", { class: "req" }, avatar(rn, q.rider_id || q.id),
+          el("div", { class: "who" }, el("b", { text: rn }), el("small", { text: [q.rider && q.rider.college, q.message].filter(Boolean).join(" · ") || "No message" })));
+        if (q.status === "pending") {
+          row.append(
+            el("button", { class: "btn btn-ok btn-sm", disabled: (offer && full) || null, onclick: () => act(() => API.setStatus(q.id, "approved"), "Approved. They can see your contact now.") }, "Approve"),
+            el("button", { class: "text-btn", onclick: () => act(() => API.setStatus(q.id, "declined"), "Declined") }, "Decline"));
+        } else row.append(el("span", { class: "state " + q.status, text: q.status === "approved" ? "Approved" : "Declined" }));
+        box.append(row);
+      }
+      c.append(box);
+    }
+  } else if (myReq && myReq.status === "approved") {
+    c.append(el("div", { class: "sealed open" }, el("span", { html: UNLOCK, style: "display:contents" }), el("span", {}, "Contact: ", el("b", { text: contact || "loading…" }))));
+  } else {
+    c.append(el("div", { class: "sealed" }, el("span", { html: LOCK, style: "display:contents" }), el("span", { text: "Contact unlocks when " + (offer ? "the driver approves your request" : "they accept your offer") })));
+  }
+
+  const foot = el("div", { class: "foot" }, el("div", { class: "driver" }, avatar(ownerName, r.owner_id), el("div", {}, el("b", { text: ownerName }), el("small", { text: owner.college || (offer ? "Driver" : "Rider") }))));
+  if (mine) foot.append(el("button", { class: "text-btn danger", onclick: () => { if (confirm("Remove this ride? Requests and contact details go with it.")) act(() => API.deleteRide(r.id), "Ride removed"); } }, "Remove"));
+  else if (!myReq) foot.append(el("button", { class: "btn btn-primary btn-sm", disabled: full || null, onclick: () => openReq(r) }, full ? "Car is full" : offer ? "Request a seat" : "Offer to drive"));
+  else {
+    const label = { pending: "Request sent", approved: "You're in", declined: "Not this time" }[myReq.status];
+    foot.append(el("span", { class: "status " + myReq.status, text: label }));
+    if (myReq.status !== "declined") foot.append(el("button", { class: "text-btn", onclick: () => act(() => API.cancelRequest(myReq.id), myReq.status === "approved" ? "You left the ride" : "Request cancelled") }, myReq.status === "approved" ? "Leave" : "Cancel"));
+  }
+  c.append(foot);
+  return c;
+}
+
+async function act(fn, ok) {
+  try { await fn(); toast(ok); await refresh(); }
+  catch (e) { console.error(e); toast("That didn't go through. Try again."); }
+}
+
+/* ---------------- HUD ---------------- */
+let hudIdx = 0, hudTimer;
+function renderHud() {
+  const offers = S.rides.filter(r => r.kind === "offer" && new Date(r.depart_at) > Date.now() && (S.counts[r.id] || 0) < num(r.seats)).slice(0, 5);
+  const dots = $("#hudDots"); dots.replaceChildren();
+  clearInterval(hudTimer);
+  if (S.mode === "signedout") { setHud("Sign in to see who's leaving next", "—", "—", "—"); $("#hudCount").textContent = ""; return; }
+  if (S.mode === "loading") return;
+  if (!offers.length) { setHud("No drives posted yet", "—", "—", "—"); $("#hudCount").textContent = ""; return; }
+  $("#hudCount").textContent = offers.length + (offers.length === 1 ? " ride" : " rides");
+  offers.forEach(() => dots.append(el("i")));
+  const show = () => {
+    const r = offers[hudIdx % offers.length], p = perSeat(r);
+    const body = $("#hudBody"); body.style.opacity = 0;
+    setTimeout(() => {
+      const route = $("#hudRoute"); route.replaceChildren(r.origin, el("span", { class: "arrow", text: "→" }), r.destination);
+      $("#hudWhen").textContent = relText(r.depart_at);
+      $("#hudSeats").textContent = String(num(r.seats) - (S.counts[r.id] || 0));
+      $("#hudPrice").textContent = p != null ? money(p) : "Ask";
+      $$("#hudDots i").forEach((d, i) => d.classList.toggle("on", i === hudIdx % offers.length));
+      body.style.opacity = 1;
+    }, matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 300);
+  };
+  hudIdx = 0; show();
+  if (offers.length > 1 && !matchMedia("(prefers-reduced-motion: reduce)").matches) hudTimer = setInterval(() => { hudIdx++; show(); }, 4500);
+}
+function setHud(route, w, s, p) { $("#hudRoute").textContent = route; $("#hudWhen").textContent = w; $("#hudSeats").textContent = s; $("#hudPrice").textContent = p; $("#hudBody").style.opacity = 1; }
+
+/* ---------------- dialogs ---------------- */
+$$("dialog").forEach(d => {
+  d.addEventListener("click", e => { if (e.target === d) d.close(); });
+  $$("[data-close]", d).forEach(b => b.addEventListener("click", () => d.close()));
+});
+$("#signInBtn").addEventListener("click", openSignIn);
+$$("[data-signin]").forEach(b => b.addEventListener("click", openSignIn));
+$("#meChip").addEventListener("click", () => openProfile(false));
+$$("[data-post]").forEach(b => b.addEventListener("click", () => openPost(b.dataset.post)));
+
+function openSignIn() {
+  if (S.mode === "demo") { toast("Demo mode: you're already signed in on this browser."); return; }
+  $("#signInBody").hidden = false; $("#signInSent").hidden = true; $("#sSubmit").hidden = false; $("#sErr").textContent = "";
+  $("#dSignIn").showModal(); setTimeout(() => $("#sEmail").focus(), 30);
+}
+$("#fSignIn").addEventListener("submit", async e => {
+  e.preventDefault();
+  const email = $("#sEmail").value.trim().toLowerCase(), err = $("#sErr");
+  if (!/^[^\s@]+@[^\s@]+$/.test(email)) { err.textContent = "Enter your full email address."; return; }
+  if (!email.endsWith("@" + DOMAIN)) { err.textContent = `Use your @${DOMAIN} email. This board is for ${CFG.CAMPUS_NAME || "campus"} students only.`; return; }
+  const btn = $("#sSubmit"); btn.disabled = true; err.textContent = "";
+  try {
+    const { error } = await API.sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
+    if (error) throw error;
+    $("#signInBody").hidden = true; $("#signInSent").hidden = false; btn.hidden = true;
+    $("#sentTo").textContent = `We sent a sign-in link to ${email}. Open it on this device to finish.`;
+  } catch (ex) { err.textContent = /rate|seconds/i.test(ex.message || "") ? "Too many tries. Wait a minute, then send another link." : "Couldn't send the link. Check the address and try again."; }
+  finally { btn.disabled = false; }
+});
+
+function openProfile(first) {
+  $("#tProfile").textContent = first ? "Set up your profile" : "Your profile";
+  $("#pName").value = (S.profile && S.profile.display_name) || "";
+  $("#pCollege").value = (S.profile && S.profile.college) || "";
+  $("#pErr").textContent = "";
+  $("#dProfile").showModal(); setTimeout(() => $("#pName").focus(), 30);
+}
+$("#fProfile").addEventListener("submit", async e => {
+  e.preventDefault();
+  const display_name = $("#pName").value.trim(), college = $("#pCollege").value.trim();
+  if (!display_name) { $("#pErr").textContent = "Add the name drivers and riders will see."; return; }
+  const btn = $("#pSubmit"); btn.disabled = true;
+  try { await API.saveProfile({ display_name, college }); S.profile = { display_name, college }; updateHeader(); $("#dProfile").close(); toast("Profile saved"); refresh(); }
+  catch { $("#pErr").textContent = "Couldn't save your profile. Try again."; }
+  finally { btn.disabled = false; }
+});
+$("#signOutBtn").addEventListener("click", async () => { $("#dProfile").close(); await API.signOut(); toast("Signed out"); });
+
+let postKind = "offer";
+function setPostKind(k) {
+  postKind = k;
+  $$("[data-pk]").forEach(b => b.setAttribute("aria-pressed", b.dataset.pk === k));
+  $$("[data-drive]", $("#dPost")).forEach(n => n.hidden = k !== "offer");
+  $("#tPost").textContent = k === "offer" ? "Post a ride" : "Ask for a ride";
+  $("#rSubmit").textContent = k === "offer" ? "Post ride" : "Post request";
+  $("#rSeatsLabel").textContent = k === "offer" ? "Open seats" : "Seats needed";
+  $("#rContact").nextElementSibling.textContent = k === "offer" ? "Sealed. Only riders you approve can see it." : "Sealed. Only the driver you accept can see it.";
+  updatePreview();
+}
+function updatePreview() { const p = perSeat({ kind: "offer", miles: $("#rMiles").value, mpg: $("#rMpg").value, gas_price: $("#rGas").value, seats: $("#rSeats").value }); $("#rPreview").textContent = p != null ? money(p) : "Add the distance"; }
+$$("[data-pk]").forEach(b => b.addEventListener("click", () => setPostKind(b.dataset.pk)));
+["#rMiles", "#rMpg", "#rGas", "#rSeats"].forEach(s => $(s).addEventListener("input", updatePreview));
+function openPost(k) {
+  if (needSignIn()) return;
+  $("#fPost").reset(); $("#rErr").textContent = "";
+  const t = localDate(new Date()); $("#rDate").min = t; $("#rDate").value = t;
+  setPostKind(k); $("#dPost").showModal(); setTimeout(() => $("#rFrom").focus(), 30);
+}
+$("#fPost").addEventListener("submit", async e => {
+  e.preventDefault();
+  const err = $("#rErr"), origin = $("#rFrom").value.trim(), destination = $("#rTo").value.trim(), contact = $("#rContact").value.trim();
+  const depart = new Date($("#rDate").value + "T" + ($("#rTime").value || "09:00"));
+  if (!origin || !destination) { err.textContent = "Add where the trip starts and where it's headed."; return; }
+  if (isNaN(depart)) { err.textContent = "Pick a date and time."; return; }
+  if (depart < Date.now() - 5 * 6e4) { err.textContent = "That time has already passed. Pick a later one."; return; }
+  if (!contact) { err.textContent = "Add a phone number or handle so approved people can reach you."; return; }
+  const ride = { kind: postKind, category: $("#rCat").value, origin, destination, depart_at: depart.toISOString(), seats: num($("#rSeats").value), miles: num($("#rMiles").value) || null, note: $("#rNote").value.trim() || null };
+  if (postKind === "offer") Object.assign(ride, { mpg: num($("#rMpg").value) || null, gas_price: num($("#rGas").value) || null });
+  const btn = $("#rSubmit"); btn.disabled = true; err.textContent = "";
+  try { await API.createRide(ride, contact); $("#dPost").close(); toast(postKind === "offer" ? "Ride posted" : "Request posted"); await refresh(); document.getElementById("board").scrollIntoView(); }
+  catch (ex) { console.error(ex); err.textContent = "Couldn't post that. Check the details and try again."; }
+  finally { btn.disabled = false; }
+});
+
+let reqRide = null;
+function openReq(r) {
+  if (needSignIn()) return;
+  reqRide = r;
+  const offer = r.kind === "offer";
+  $("#tReq").textContent = offer ? "Request a seat" : "Offer to drive";
+  $("#qSubmit").textContent = offer ? "Send request" : "Send offer";
+  $("#reqLead").textContent = `${r.origin} to ${r.destination}, ${whenText(r.depart_at)}. ${offer ? "The driver" : "They"} will see your name${S.profile && S.profile.college ? ", college," : ""} and this message.`;
+  $("#qMsg").value = ""; $("#qErr").textContent = "";
+  $("#dReq").showModal(); setTimeout(() => $("#qMsg").focus(), 30);
+}
+$("#fReq").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = $("#qSubmit"); btn.disabled = true;
+  try { await API.requestSeat(reqRide.id, $("#qMsg").value.trim()); $("#dReq").close(); toast(reqRide.kind === "offer" ? "Request sent. You'll see the contact once approved." : "Offer sent"); await refresh(); }
+  catch (ex) { console.error(ex); $("#qErr").textContent = /duplicate|unique/i.test(ex.message || "") ? "You've already sent a request for this ride." : "Couldn't send that. Try again."; }
+  finally { btn.disabled = false; }
+});
+
+/* ---------------- calculator ---------------- */
+function calc() {
+  const round = $("#cRound").checked, free = $("#cFree").checked;
+  const miles = num($("#cMiles").value) * (round ? 2 : 1), mpg = num($("#cMpg").value), gas = num($("#cGas").value), tolls = num($("#cTolls").value);
+  const people = +$("#cPeople").value; $("#cPeopleOut").textContent = people;
+  const gal = mpg ? miles / mpg : 0, fuel = gal * gas, total = fuel + tolls, payers = free ? Math.max(1, people - 1) : people;
+  $("#cEach").textContent = money(total / payers);
+  $("#cEachLabel").textContent = (free && people > 1 ? "per passenger" : "per person") + ", " + payers + " paying";
+  $("#cGal").textContent = gal.toFixed(1) + " gal"; $("#cFuel").textContent = money(fuel); $("#cToll").textContent = money(tolls); $("#cTotal").textContent = money(total);
+}
+$$("#split input").forEach(i => i.addEventListener("input", calc)); calc();
+
+/* ---------------- night road canvas ---------------- */
+(function road() {
+  const cv = $("#road"), ctx = cv.getContext("2d");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+  let w = 0, h = 0, dpr = 1, running = true, t0 = performance.now();
+  const cars = Array.from({ length: 14 }, (_, i) => ({ z: Math.random(), lane: i % 2 ? 1 : -1, speed: .05 + Math.random() * .05 }));
+  function size() { dpr = Math.min(2, devicePixelRatio || 1); w = cv.clientWidth; h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
+  function frame(now) {
+    const t = Math.max(0, (now - t0) / 1000);
+    const vx = w * (w < 900 ? .5 : .66), hy = h * .5;
+    const sky = ctx.createLinearGradient(0, 0, 0, hy);
+    sky.addColorStop(0, "#0B1430"); sky.addColorStop(.75, "#1A2756"); sky.addColorStop(1, "#3B3566");
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, w, hy);
+    const glow = ctx.createRadialGradient(vx, hy, 0, vx, hy, w * .45);
+    glow.addColorStop(0, "rgba(255,181,71,.38)"); glow.addColorStop(1, "rgba(255,181,71,0)");
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, w, h);
+    // hills
+    ctx.fillStyle = "#121C3A"; ctx.beginPath(); ctx.moveTo(0, hy);
+    for (let x = 0; x <= w; x += 20) ctx.lineTo(x, hy - 18 - 22 * Math.sin(x / 140) - 14 * Math.sin(x / 57 + 1.3));
+    ctx.lineTo(w, hy); ctx.closePath(); ctx.fill();
+    // ground
+    const gr = ctx.createLinearGradient(0, hy, 0, h); gr.addColorStop(0, "#141E3C"); gr.addColorStop(1, "#0C1430");
+    ctx.fillStyle = gr; ctx.fillRect(0, hy, w, h - hy);
+    const P = (lx, z) => ({ x: vx + lx * z * z * w * .9, y: hy + (h - hy) * z * z });
+    // road
+    ctx.fillStyle = "#1B2546"; ctx.beginPath();
+    const a = P(-1, 0.02), b = P(1, 0.02), c = P(1, 1.05), d = P(-1, 1.05);
+    ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.lineTo(d.x, d.y); ctx.fill();
+    // edge lines
+    ctx.strokeStyle = "rgba(79,214,224,.55)"; ctx.lineWidth = 2; ctx.shadowColor = "#4FD6E0"; ctx.shadowBlur = 10;
+    for (const s of [-.92, .92]) { const p1 = P(s, .02), p2 = P(s, 1.05); ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); }
+    ctx.shadowBlur = 0;
+    // center dashes
+    const off = (t * .55) % .1;
+    ctx.fillStyle = "#FFB547";
+    for (let k = 0; k < 12; k++) {
+      const z1 = Math.sqrt(Math.max(0, (k * .1 + off))), z2 = Math.sqrt(Math.min(1.1, k * .1 + off + .045));
+      if (z1 <= .05) continue;
+      const p1 = P(0, z1), p2 = P(0, z2), wd = 1 + z1 * 5;
+      ctx.beginPath(); ctx.moveTo(p1.x - wd / 2, p1.y); ctx.lineTo(p1.x + wd / 2, p1.y); ctx.lineTo(p2.x + wd, p2.y); ctx.lineTo(p2.x - wd, p2.y); ctx.fill();
+    }
+    // streetlights
+    for (let k = 0; k < 8; k++) {
+      const z = Math.sqrt(((k / 8) + t * .06) % 1); if (z < .15) continue;
+      for (const s of [-1.25, 1.25]) {
+        const p = P(s, z), ph = 70 * z * z + 4;
+        ctx.strokeStyle = "rgba(120,135,170,.55)"; ctx.lineWidth = Math.max(1, z * 2.5);
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y - ph); ctx.stroke();
+        const g = ctx.createRadialGradient(p.x, p.y - ph, 0, p.x, p.y - ph, 26 * z + 4);
+        g.addColorStop(0, "rgba(255,200,110,.95)"); g.addColorStop(1, "rgba(255,181,71,0)");
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y - ph, 26 * z + 4, 0, 7); ctx.fill();
+      }
+    }
+    // cars: left lane taillights moving away, right lane headlights coming
+    for (const car of cars) {
+      car.z += (car.lane < 0 ? -1 : 1) * car.speed * (reduce.matches ? 0 : 1) / 60;
+      if (car.z > 1.05) car.z = .05; if (car.z < .05) car.z = 1.05;
+      const z = car.z, p = P(car.lane * .45, z), sp = 6 + z * z * 40, r = .8 + z * z * 5;
+      const col = car.lane < 0 ? "255,90,78" : "235,244,255";
+      for (const s of [-1, 1]) {
+        const g = ctx.createRadialGradient(p.x + s * sp / 2, p.y, 0, p.x + s * sp / 2, p.y, r * 4);
+        g.addColorStop(0, `rgba(${col},1)`); g.addColorStop(1, `rgba(${col},0)`);
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x + s * sp / 2, p.y, r * 4, 0, 7); ctx.fill();
+      }
+    }
+    if (running && !reduce.matches) requestAnimationFrame(frame);
+  }
+  size(); requestAnimationFrame(frame);
+  addEventListener("resize", () => { size(); if (!running || reduce.matches) requestAnimationFrame(frame); });
+  new IntersectionObserver(([e]) => { const was = running; running = e.isIntersecting; if (running && !was) requestAnimationFrame(frame); }).observe(cv);
+  reduce.addEventListener && reduce.addEventListener("change", () => requestAnimationFrame(frame));
+})();
+
+boot();
+})();
+</script>
+</body>
+</html>
